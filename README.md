@@ -21,6 +21,41 @@ destinée à un public non technique.
 | Défauts évités | 74 % au seuil retenu, en écartant 16 % des bons clients |
 | Coût évité | 15,4 M€ sur 45 000 dossiers, sous l'hypothèse de coût retenue |
 
+## Comparaison au classement Kaggle
+
+Le modèle a été réentraîné sur les 150 000 dossiers étiquetés, puis soumis sur
+le jeu de test de la compétition (101 503 dossiers jamais vus).
+
+| | Ce projet | Vainqueur *Perfect Storm* | Écart |
+|---|---|---|---|
+| **Score privé** | **0,86847** | 0,86955 | 0,00108 |
+| Score public | 0,86150 | 0,86390 | 0,00240 |
+
+**89e sur 925 équipes au classement public**, et juste en deçà des vingt
+premiers au classement privé, dont le dernier est à 0,86880.
+
+Un millième d'AUC sépare ce projet du vainqueur. À titre de comparaison,
+l'écart entre ce modèle et une régression logistique sur données brutes est de
+0,17 — cent soixante fois plus. Ce dernier millième s'obtient par assemblage
+de dizaines de modèles et empilement, ce qui n'a pas été tenté ici : il s'agit
+d'un LightGBM unique, réglé en huit essais, sans création de variable.
+
+**Le résultat le plus utile n'est pas le score, c'est son exactitude.**
+L'estimation interne, obtenue sur 45 000 dossiers mis de côté, annonçait
+**0,867**. Le jeu de test réel a donné **0,86847** — légèrement mieux
+qu'annoncé. Le protocole d'évaluation (découpe stratifiée, validation croisée
+à l'intérieur de l'entraînement, nettoyage réappris à chaque pli, absence de
+fuite vérifiée par un test) a donc produit un chiffre fiable avant toute
+confrontation aux données de test. C'est ce qu'on attend d'une évaluation :
+savoir ce que vaudra le modèle avant de le déployer, pas après.
+
+À noter enfin que le score public (0,86150) est sensiblement inférieur au
+privé (0,86847). Le classement public de cette compétition portait sur une
+fraction réduite du jeu de test, donc bruitée — une raison de plus de ne
+jamais piloter un modèle sur un classement public.
+
+Reproduire cette soumission : `python scripts/soumission.py`.
+
 ## Ce que l'exploration a trouvé
 
 Trois défauts de qualité qui fausseraient un modèle entraîné sans examen
