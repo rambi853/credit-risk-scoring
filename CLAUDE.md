@@ -26,6 +26,8 @@ jupyter lab
 
 # Récupérer les données (nécessite ~/.kaggle/kaggle.json, chmod 600)
 kaggle competitions download -c GiveMeSomeCredit -p data/raw
+
+pytest                            # tests de src/preparation.py
 ```
 
 ## Structure
@@ -41,7 +43,12 @@ slides/            présentation finale
 
 ## Conventions
 
-- Toute fonction réutilisée par plus d'un notebook part dans `src/`.
+- Toute fonction réutilisée par plus d'un notebook part dans `src/`, et ce qui
+  part dans `src/` est testé : ce module porte la logique métier, une
+  régression y serait silencieuse.
+- Le test `test_le_resultat_ne_depend_pas_du_jeu_d_ajustement` garde la porte
+  fermée à la fuite de données : rien dans le nettoyage ne doit être appris
+  sur les données transformées.
 - Les graphiques destinés aux slides sont exportés dans `reports/figures/`,
   pas seulement affichés en sortie de cellule.
 - Métrique de référence : **AUC**, jamais l'accuracy (les classes sont
