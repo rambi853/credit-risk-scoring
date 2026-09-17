@@ -1,0 +1,29 @@
+# Données — jamais versionnées (volumineuses, et les règles Kaggle interdisent la redistribution)
+data/**
+!data/raw/
+!data/processed/
+!data/**/.gitkeep
+
+# Secrets
+.kaggle/
+kaggle.json
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Modèles entraînés
+models/
+*.pkl
+*.joblib
+
+# macOS
+.DS_Store
