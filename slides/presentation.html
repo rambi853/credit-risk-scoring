@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Présentation métier du projet Give Me Some Credit.
+  Générée pour être ouverte directement dans un navigateur, et publiée par
+  ailleurs comme artifact. Les chiffres proviennent de notebooks/03_modelisation.ipynb,
+  les figures de reports/figures/ (copiées dans slides/fig/ pour rendre ce
+  dossier autonome).
+-->
+<title>Décider qui financer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<style>
+  :root {
+    --ground:    #f7f8fa;
+    --surface:   #ffffff;
+    --ink:       #12161f;
+    --ink-2:     #545c6b;
+    --muted:     #7c8595;
+    --hairline:  rgba(18, 22, 31, 0.11);
+    --blue:      #2a78d6;
+    --blue-soft: rgba(42, 120, 214, 0.10);
+    --accent:    #c0501c;
+    --accent-soft: rgba(235, 104, 52, 0.12);
+    --nuit:      #101826;
+    --nuit-ink:  #f4f6f9;
+    --nuit-ink2: #9aa6b8;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0e1218;
+      --surface:   #171c24;
+      --ink:       #f2f4f7;
+      --ink-2:     #aab2bf;
+      --muted:     #8b94a3;
+      --hairline:  rgba(255, 255, 255, 0.13);
+      --blue:      #5a9bea;
+      --blue-soft: rgba(90, 155, 234, 0.14);
+      --accent:    #f0874f;
+      --accent-soft: rgba(240, 135, 79, 0.16);
+      --nuit:      #080c12;
+      --nuit-ink:  #f4f6f9;
+      --nuit-ink2: #9aa6b8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:    #0e1218;
+    --surface:   #171c24;
+    --ink:       #f2f4f7;
+    --ink-2:     #aab2bf;
+    --muted:     #8b94a3;
+    --hairline:  rgba(255, 255, 255, 0.13);
+    --blue:      #5a9bea;
+    --blue-soft: rgba(90, 155, 234, 0.14);
+    --accent:    #f0874f;
+    --accent-soft: rgba(240, 135, 79, 0.16);
+    --nuit:      #080c12;
+    --nuit-ink:  #f4f6f9;
+    --nuit-ink2: #9aa6b8;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #pont {
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) { #pont { scroll-behavior: auto; } }
+
+  .slide {
+    scroll-snap-align: start;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: clamp(28px, 5vh, 64px) clamp(16px, 5vw, 76px) clamp(64px, 9vh, 92px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(14px, 2.2vh, 26px);
+    position: relative;
+  }
+  .slide.sombre { background: var(--nuit); color: var(--nuit-ink); }
+  .slide.sombre .eyebrow { color: var(--nuit-ink2); }
+  .slide.sombre p, .slide.sombre li { color: var(--nuit-ink2); }
+  .slide.sombre strong { color: var(--nuit-ink); }
+
+  .eyebrow {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(38px, 7.4vw, 76px);
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(27px, 4.1vw, 43px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+  p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+  p.grand { font-size: clamp(17px, 2.1vw, 21px); color: var(--ink); }
+  strong { color: var(--ink); font-weight: 600; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .colonnes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(20px, 3.5vw, 52px);
+    align-items: center;
+  }
+  @media (max-width: 860px) { .colonnes { grid-template-columns: 1fr; } }
+
+  .figure {
+    background: #ffffff;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 14px rgba(16, 24, 38, 0.07);
+  }
+  .figure img { display: block; width: 100%; height: auto; border-radius: 4px; }
+  figcaption { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+  .stat-geante {
+    font-family: var(--serif);
+    font-size: clamp(64px, 15vw, 150px);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-legende { font-size: clamp(15px, 1.9vw, 19px); color: var(--ink-2); max-width: 30ch; }
+
+  .duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 3vw, 40px); }
+  @media (max-width: 620px) { .duo { grid-template-columns: 1fr; } }
+  .duo .chiffre {
+    font-family: var(--serif);
+    font-size: clamp(46px, 8vw, 84px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .duo .avec { color: var(--accent); }
+  .duo .sans { color: var(--muted); }
+  .duo .quoi { font-size: 14.5px; color: var(--ink-2); margin-top: 8px; max-width: 26ch; }
+
+  .etapes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2.6vw, 34px); }
+  @media (max-width: 760px) { .etapes { grid-template-columns: 1fr; } }
+  .etape { display: flex; flex-direction: column; gap: 9px; }
+  .pastille {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--blue-soft); color: var(--blue);
+    display: grid; place-items: center;
+    font-weight: 600; font-size: 15px; flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .etape h3 { font-size: 17px; font-weight: 600; margin: 0; color: var(--ink); font-family: var(--sans); }
+  .etape p { font-size: 14.5px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 15px; }
+  caption { text-align: left; font-size: 13px; color: var(--muted); padding-bottom: 10px; }
+  th, td { padding: 13px 14px; text-align: right; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--hairline); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  tbody tr.retenu { background: var(--accent-soft); }
+  tbody tr.retenu td:first-child { font-weight: 600; color: var(--ink); }
+  tbody tr:last-child td { border-bottom: none; }
+  .tag {
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-left: 8px;
+  }
+
+  .cartes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2.4vw, 26px); }
+  @media (max-width: 800px) { .cartes { grid-template-columns: 1fr; } }
+  .carte {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .carte h3 { font-size: 16.5px; font-weight: 600; margin: 0; color: var(--ink); font-family: var(--sans); }
+  .carte p { font-size: 14.5px; }
+  .carte .rang {
+    font-family: var(--serif); font-size: 30px; font-weight: 700;
+    color: var(--blue); line-height: 1;
+  }
+  .slide.sombre .carte { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+  .slide.sombre .carte h3 { color: var(--nuit-ink); }
+  .slide.sombre .carte .rang { color: #f0874f; }
+
+  .reserve {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    font-size: 14.5px;
+    color: var(--ink);
+    max-width: 68ch;
+  }
+  .slide.sombre .reserve { color: var(--nuit-ink); background: rgba(240,135,79,0.14); }
+
+  .meta { font-size: 13.5px; color: var(--nuit-ink2); display: flex; gap: 10px; flex-wrap: wrap; }
+  .meta span::after { content: "·"; margin-left: 10px; color: var(--muted); }
+  .meta span:last-child::after { content: ""; }
+
+  /* barre de navigation */
+  .nav {
+    position: fixed;
+    right: clamp(12px, 3vw, 30px);
+    bottom: calc(clamp(12px, 3vh, 26px) + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 6px 8px 6px 14px;
+    box-shadow: 0 3px 16px rgba(16, 24, 38, 0.13);
+    z-index: 10;
+  }
+  .nav .compteur { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .nav button {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: none; background: var(--blue-soft); color: var(--blue);
+    font-size: 15px; cursor: pointer; display: grid; place-items: center;
+    font-family: var(--sans); line-height: 1;
+  }
+  .nav button:hover { background: var(--blue); color: #fff; }
+  .nav button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .nav button[disabled] { opacity: 0.35; cursor: default; }
+  .nav button[disabled]:hover { background: var(--blue-soft); color: var(--blue); }
+</style>
+</head>
+<body>
+<div id="pont">
+
+  <section class="slide sombre" aria-label="Titre">
+    <p class="eyebrow">Direction des risques — septembre 2026</p>
+    <h1>Décider qui financer</h1>
+    <p class="grand" style="color: var(--nuit-ink); max-width: 46ch;">
+      Un outil d'arbitrage pour l'octroi de crédit : il classe les dossiers par
+      risque, vous gardez la main sur la décision.
+    </p>
+    <div class="meta">
+      <span>150 000 dossiers analysés</span>
+      <span>45 000 dossiers de contrôle</span>
+      <span>Antoine Rambaud</span>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Le problème">
+    <p class="eyebrow">01 — Le problème</p>
+    <div class="colonnes">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h2>Un dossier sur quinze finit en incident de paiement grave</h2>
+        <p class="grand">
+          Sur les 45 000 dossiers de contrôle, <strong class="num">3 008</strong> ont
+          connu un impayé sérieux dans les deux ans. Au moment de l'octroi, rien
+          ne les distinguait des autres.
+        </p>
+        <p>Toute la question est de savoir lesquels, avant de prêter.</p>
+      </div>
+      <figure class="figure" style="margin:0;">
+        <img src="fig/cible.png" alt="Répartition des dossiers : 93,3 % de clients sains, 6,7 % de défauts">
+        <figcaption>Répartition observée sur les dossiers de contrôle.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Ce que fait l'outil">
+    <p class="eyebrow">02 — Ce que fait l'outil</p>
+    <h2>Il classe les dossiers. Il n'en refuse aucun.</h2>
+    <p class="grand">
+      C'est la distinction qui compte : l'outil ne remplace pas une décision,
+      il la documente. Aucun refus n'est automatique.
+    </p>
+    <div class="etapes" style="margin-top:8px;">
+      <div class="etape">
+        <div class="pastille">1</div>
+        <h3>Il lit le dossier</h3>
+        <p>Dix informations déjà présentes dans vos systèmes : encours, incidents passés, revenus, ancienneté.</p>
+      </div>
+      <div class="etape">
+        <div class="pastille">2</div>
+        <h3>Il attribue un score</h3>
+        <p>Une probabilité de défaut, de 0 à 100 %, qui permet de ranger les dossiers du plus sûr au plus risqué.</p>
+      </div>
+      <div class="etape">
+        <div class="pastille">3</div>
+        <h3>Vous arbitrez</h3>
+        <p>Vous fixez à partir de quel score un dossier remonte pour examen. Ce curseur vous appartient.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Fiabilité">
+    <p class="eyebrow">03 — Est-ce fiable ?</p>
+    <h2>Parmi les dossiers signalés, un sur quatre fait réellement défaut</h2>
+    <div class="duo" style="margin-top:6px;">
+      <div>
+        <div class="chiffre avec num">1 sur 4</div>
+        <p class="quoi">avec l'outil, parmi les dossiers qu'il signale au seuil équilibré</p>
+      </div>
+      <div>
+        <div class="chiffre sans num">1 sur 15</div>
+        <p class="quoi">sans l'outil, si l'on examinait des dossiers pris au hasard</p>
+      </div>
+    </div>
+    <p class="grand" style="margin-top:8px;">
+      À effort d'examen égal, l'outil concentre <strong>près de quatre fois plus</strong>
+      de vrais risques dans la pile à regarder.
+    </p>
+  </section>
+
+  <section class="slide" aria-label="Le curseur">
+    <p class="eyebrow">04 — Le curseur</p>
+    <div class="colonnes">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h2>Vous choisissez où placer le curseur</h2>
+        <p class="grand">
+          Refuser peu laisse passer des défauts. Refuser large écarte des bons
+          clients. Entre les deux, il existe une zone où le coût total est le
+          plus bas — et elle est large.
+        </p>
+        <p>
+          La courbe descend vite, puis reste plate sur une longue portion :
+          c'est ce plateau qui rend l'arbitrage confortable.
+        </p>
+      </div>
+      <figure class="figure" style="margin:0;">
+        <img src="fig/curseur.png" alt="Courbe du coût total en fonction du seuil de refus, minimale autour de 0,08">
+        <figcaption>Coût total selon la position du curseur, exprimé en nombre de bons clients refusés.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Trois positions">
+    <p class="eyebrow">05 — Trois positions possibles</p>
+    <h2>La même mécanique, trois postures commerciales</h2>
+    <div class="table-wrap">
+      <table>
+        <caption>Sur 45 000 dossiers de contrôle comportant 3 008 défauts.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Posture</th>
+            <th scope="col">Dossiers refusés</th>
+            <th scope="col">Défauts évités</th>
+            <th scope="col">Bons clients écartés</th>
+            <th scope="col">Justesse des refus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Prudente</td>
+            <td class="num">5 085</td>
+            <td class="num">1 778 <span style="color:var(--muted)">(59 %)</span></td>
+            <td class="num">3 307</td>
+            <td class="num">35 %</td>
+          </tr>
+          <tr class="retenu">
+            <td>Équilibrée<span class="tag">recommandée</span></td>
+            <td class="num">9 000</td>
+            <td class="num">2 216 <span style="color:var(--muted)">(74 %)</span></td>
+            <td class="num">6 784</td>
+            <td class="num">25 %</td>
+          </tr>
+          <tr>
+            <td>Stricte</td>
+            <td class="num">11 363</td>
+            <td class="num">2 409 <span style="color:var(--muted)">(80 %)</span></td>
+            <td class="num">8 954</td>
+            <td class="num">21 %</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Plus on refuse large, plus on évite de défauts — mais la justesse des refus
+      se dégrade, car on descend dans des dossiers de moins en moins risqués.
+    </p>
+  </section>
+
+  <section class="slide" aria-label="Le gain">
+    <p class="eyebrow">06 — Ce que cela représente</p>
+    <div class="colonnes">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <h2>15,4 M€ de pertes évitées sur le portefeuille de contrôle</h2>
+        <p class="grand">
+          En valorisant un défaut à <strong class="num">10 000 €</strong> de capital perdu
+          et un bon client écarté à <strong class="num">1 000 €</strong> de marge manquée,
+          le coût passe de <strong class="num">30,1 M€</strong> à <strong class="num">14,7 M€</strong>.
+        </p>
+        <p>
+          Ces montants illustrent un ordre de grandeur sur 45 000 dossiers ; ils
+          se recalculent avec vos propres paramètres.
+        </p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="stat-geante num">15,4</div>
+        <div class="stat-legende">millions d'euros d'écart entre ne rien faire et appliquer la posture équilibrée.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Le plateau">
+    <p class="eyebrow">07 — Pourquoi c'est confortable</p>
+    <h2>Se tromper de curseur coûte peu</h2>
+    <div class="duo">
+      <div>
+        <div class="chiffre avec num">+ 6 %</div>
+        <p class="quoi">c'est tout l'écart de coût entre la posture prudente et la posture stricte</p>
+      </div>
+      <div>
+        <div class="chiffre sans num">× 2,2</div>
+        <p class="quoi">alors que le nombre de dossiers refusés, lui, plus que double</p>
+      </div>
+    </div>
+    <p class="grand">
+      Autrement dit, le choix du curseur est d'abord une <strong>décision
+      commerciale</strong> — combien de clients acceptez-vous d'écarter ? — et non un
+      pari financier. Vous pouvez ajuster votre politique sans craindre de
+      dégrader sensiblement le résultat économique.
+    </p>
+  </section>
+
+  <section class="slide" aria-label="Le paramètre à fixer">
+    <p class="eyebrow">08 — La seule question qui reste</p>
+    <div class="colonnes">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h2>Combien vous coûte un défaut, rapporté à un bon client perdu ?</h2>
+        <p class="grand">
+          C'est le seul paramètre que l'outil ne peut pas déduire des données.
+          Nous avons retenu un rapport de <strong>1 à 10</strong>, usuel en crédit à
+          la consommation.
+        </p>
+        <p>
+          Le graphique montre ce que d'autres hypothèses impliqueraient. Plus un
+          défaut coûte cher, plus il devient rationnel de refuser large.
+        </p>
+      </div>
+      <figure class="figure" style="margin:0;">
+        <img src="fig/sensibilite.png" alt="Part des défauts captés et des bons clients refusés selon le rapport de coût, de 1:2 à 1:50">
+        <figcaption>Conséquences du rapport de coût sur la politique de refus.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="slide" aria-label="Explicabilité">
+    <p class="eyebrow">09 — Ce que l'outil regarde</p>
+    <h2>Trois facteurs expliquent l'essentiel des décisions</h2>
+    <div class="cartes">
+      <div class="carte">
+        <div class="rang">1</div>
+        <h3>La saturation du crédit</h3>
+        <p>La part des lignes de crédit déjà consommée. C'est le signal le plus fort : le risque passe de 3 % à 23 % entre les emprunteurs les moins et les plus exposés.</p>
+      </div>
+      <div class="carte">
+        <div class="rang">2</div>
+        <h3>Les incidents passés</h3>
+        <p>Un retard déjà survenu pèse lourd. Peu de dossiers sont concernés, mais leur risque est plusieurs fois supérieur à la moyenne.</p>
+      </div>
+      <div class="carte">
+        <div class="rang">3</div>
+        <h3>L'ancienneté de l'emprunteur</h3>
+        <p>Le risque décroît régulièrement avec l'âge, de 11 % chez les plus jeunes à 2 % chez les plus âgés.</p>
+      </div>
+    </div>
+    <p class="grand">
+      Chaque décision est décomposable dossier par dossier : un refus peut être
+      justifié au client comme au régulateur.
+    </p>
+  </section>
+
+  <section class="slide sombre" aria-label="Prochaines étapes">
+    <p class="eyebrow">10 — Prochaines étapes</p>
+    <h2 style="color: var(--nuit-ink);">Ce qu'il reste à décider, et à vérifier</h2>
+    <div class="cartes" style="margin-top:4px;">
+      <div class="carte">
+        <div class="rang">1</div>
+        <h3>Fixer le rapport de coût</h3>
+        <p>Mesurer ce que coûte réellement un défaut chez nous. C'est la décision structurante, et elle vous revient.</p>
+      </div>
+      <div class="carte">
+        <div class="rang">2</div>
+        <h3>Tester à blanc</h3>
+        <p>Faire tourner l'outil trois mois en parallèle des décisions actuelles, sans qu'il n'en influence aucune.</p>
+      </div>
+      <div class="carte">
+        <div class="rang">3</div>
+        <h3>Mettre en place le suivi</h3>
+        <p>Vérifier dans la durée la stabilité des scores et l'équité des décisions entre catégories d'emprunteurs.</p>
+      </div>
+    </div>
+    <div class="reserve">
+      Les montants présentés reposent sur un rapport de coût de 1 à 10 qui n'a pas
+      été mesuré sur nos données, et sur un seuil ajusté à partir des dossiers de
+      contrôle. Les gains réels seront un peu inférieurs.
+    </div>
+  </section>
+
+</div>
+
+<nav class="nav" aria-label="Navigation entre les slides">
+  <span class="compteur" id="compteur">1 / 11</span>
+  <button type="button" id="prec" aria-label="Slide précédente">&#8593;</button>
+  <button type="button" id="suiv" aria-label="Slide suivante">&#8595;</button>
+</nav>
+
+<script>
+(function () {
+  "use strict";
+  var pont = document.getElementById("pont");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var compteur = document.getElementById("compteur");
+  var prec = document.getElementById("prec");
+  var suiv = document.getElementById("suiv");
+  var courante = 0;
+
+  function afficher(i) {
+    courante = Math.min(slides.length - 1, Math.max(0, i));
+    compteur.textContent = (courante + 1) + " / " + slides.length;
+    prec.disabled = courante === 0;
+    suiv.disabled = courante === slides.length - 1;
+  }
+
+  function aller(i) {
+    i = Math.min(slides.length - 1, Math.max(0, i));
+    slides[i].scrollIntoView({ block: "start" });
+    afficher(i);
+  }
+
+  prec.addEventListener("click", function () { aller(courante - 1); });
+  suiv.addEventListener("click", function () { aller(courante + 1); });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (["ArrowDown", "ArrowRight", "PageDown", " "].indexOf(e.key) !== -1) {
+      e.preventDefault(); aller(courante + 1);
+    } else if (["ArrowUp", "ArrowLeft", "PageUp"].indexOf(e.key) !== -1) {
+      e.preventDefault(); aller(courante - 1);
+    } else if (e.key === "Home") {
+      e.preventDefault(); aller(0);
+    } else if (e.key === "End") {
+      e.preventDefault(); aller(slides.length - 1);
+    }
+  });
+
+  if ("IntersectionObserver" in window) {
+    var observateur = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (entree) {
+        if (entree.isIntersecting) afficher(slides.indexOf(entree.target));
+      });
+    }, { root: pont, threshold: 0.55 });
+    slides.forEach(function (s) { observateur.observe(s); });
+  }
+
+  afficher(0);
+})();
+</script>
+</body>
+</html>
