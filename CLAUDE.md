@@ -21,7 +21,7 @@ Ce projet est une remise en jambes avant une reprise de poste en data science.
 ## Commandes
 
 ```bash
-source .venv/bin/activate         # Python 3.9
+source .venv/bin/activate         # Python 3.9 — ou ../.venv si le venv est partagé avec d'autres projets
 jupyter lab
 
 # Récupérer les données (nécessite ~/.kaggle/kaggle.json, chmod 600)
